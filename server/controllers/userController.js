@@ -1,5 +1,5 @@
-const User = require("../models/User");
-const Room = require("../models/Room");
+const User = require("../models/user");
+const Room = require("../models/room");
 const bcrypt = require("bcryptjs");
 
 // GET PROFILE
