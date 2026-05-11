@@ -1,4 +1,4 @@
-const Message = require("../models/Message");
+const Message = require("../models/message");
 
 // GET MESSAGES FOR A ROOM
 const getMessages = async (req, res) => {
