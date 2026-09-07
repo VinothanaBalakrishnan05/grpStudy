@@ -3,8 +3,8 @@ import { X, Send, Bot, ChevronDown } from "lucide-react";
 import api from "../../api/axios";
 
 const MODELS = [
-  { value: "phi3:mini", label: "Phi3 Mini (faster)" },
-  { value: "mistral:7b-instruct-q4_K_M", label: "Mistral 7B (smarter)" },
+  { value: "gemini-3.1-flash-lite", label: "Fast" },
+  { value: "gemini-3-flash-preview", label: "Smarter" },
 ];
 
 const AIPanel = ({ onClose }) => {
@@ -16,7 +16,7 @@ const AIPanel = ({ onClose }) => {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [model, setModel] = useState("phi3:mini");
+  const [model, setModel] = useState("gemini-3.1-flash-lite");
   const [error, setError] = useState("");
 
   const sendMessage = async () => {

@@ -9,9 +9,9 @@ const chat = async (req, res) => {
 
   try {
     const response = await axios.post(
-      "http://localhost:11434/api/chat",
+      "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
       {
-        model: model || "phi3:mini",
+        model: model || "gemini-3.1-flash-lite",
         messages: [
           {
             role: "system",
@@ -19,24 +19,29 @@ const chat = async (req, res) => {
           },
           ...messages,
         ],
-        stream: false,
       },
       {
-        headers: { "Content-Type": "application/json" },
-        timeout: 60000,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.GEMINI_API_KEY}`,
+        },
+        timeout: 30000,
       }
     );
 
     res.status(200).json({
-      message: response.data.message.content,
+      message: response.data.choices[0].message.content,
     });
   } catch (error) {
-    if (error.code === "ECONNREFUSED") {
-      return res.status(503).json({
-        message: "Ollama is not running. Please start Ollama on your machine.",
+    if (error.response) {
+      return res.status(error.response.status).json({
+        message: error.response.data?.error?.message || "AI service error",
       });
     }
-    res.status(500).json({ message: error.message });
+    if (error.code === "ECONNABORTED") {
+      return res.status(504).json({ message: "AI request timed out" });
+    }
+    res.status(500).json({ message: "AI assistant is temporarily unavailable" });
   }
 };
 
