@@ -1,4 +1,5 @@
 const Message = require("../models/message");
+const { canDeleteMessage } = require("../utils/permissions");
 
 // GET MESSAGES FOR A ROOM
 const getMessages = async (req, res) => {
@@ -22,9 +23,10 @@ const deleteMessage = async (req, res) => {
       return res.status(404).json({ message: "Message not found" });
     }
 
-    // only sender can delete
-    if (message.senderId.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Not authorized to delete this message" });
+    if (!canDeleteMessage(req.user, message)) {
+      return res.status(403).json({
+        message: "Not authorized to delete this message",
+      });
     }
 
     await message.deleteOne();

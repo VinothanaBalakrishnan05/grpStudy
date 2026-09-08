@@ -2,9 +2,9 @@ const Message = require("../models/message");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const Room = require("../models/room");
+const { canDeleteMessage } = require("../utils/permissions");
 
 const initChatSocket = (io) => {
-
   // authenticate socket connection
   io.use(async (socket, next) => {
     try {
@@ -23,41 +23,42 @@ const initChatSocket = (io) => {
   });
 
   io.on("connection", (socket) => {
-    console.log(`User connected: ${socket.user.name}`);``
+    console.log(`User connected: ${socket.user.name}`);
+    ``;
 
     // JOIN ROOM
-     // JOIN ROOM
-socket.on("join-room", async (roomId) => {
-  try {
-    const room = await Room.findById(roomId);
+    // JOIN ROOM
+    socket.on("join-room", async (roomId) => {
+      try {
+        const room = await Room.findById(roomId);
 
-    if (!room) {
-      return socket.emit("error", {
-        message: "Room not found",
-      });
-    }
+        if (!room) {
+          return socket.emit("error", {
+            message: "Room not found",
+          });
+        }
 
-    const isMember = room.members.some(
-      (memberId) => memberId.toString() === socket.user._id.toString()
-    );
+        const isMember = room.members.some(
+          (memberId) => memberId.toString() === socket.user._id.toString(),
+        );
 
-    if (!isMember) {
-      return socket.emit("error", {
-        message: "You are not a member of this room",
-      });
-    }
+        if (!isMember) {
+          return socket.emit("error", {
+            message: "You are not a member of this room",
+          });
+        }
 
-    socket.join(roomId);
+        socket.join(roomId);
 
-    console.log(`${socket.user.name} joined room ${roomId}`);
-  } catch (err) {
-    console.error("Join room error:", err.message);
+        console.log(`${socket.user.name} joined room ${roomId}`);
+      } catch (err) {
+        console.error("Join room error:", err.message);
 
-    socket.emit("error", {
-      message: "Unable to join room",
+        socket.emit("error", {
+          message: "Unable to join room",
+        });
+      }
     });
-  }
-});
 
     // SEND MESSAGE
     socket.on("send-message", async ({ roomId, content }) => {
@@ -94,9 +95,7 @@ socket.on("join-room", async (roomId) => {
 
         if (!message) return;
 
-        // only sender can delete
-        if (message.senderId.toString() !== socket.user._id.toString()) return;
-
+        if (!canDeleteMessage(socket.user, message)) return;
         await message.deleteOne();
 
         // broadcast deletion to room

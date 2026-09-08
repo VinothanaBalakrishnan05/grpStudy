@@ -13,22 +13,23 @@ const messageRoutes = require("./routes/messageRoutes");
 const initChatSocket = require("./socket/chatSocket");
 const userRoutes = require("./routes/userRoutes");
 const chatbotRoutes=require("./routes/chatbotRoutes");
+const { authRateLimiter } = require("./middleware/rateLimiter");
 
 
 dbConnect();
 
 const app = express();
-const server = http.createServer(app); // ← right after app
+const server = http.createServer(app);
 
 app.use(cors());
 app.use(express.json());
-
+app.use("/api/auth", authRateLimiter, authRoutes);
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
   next();
 });
 
-app.use("/api/auth", authRoutes);
+
 app.use("/api/rooms", roomRoutes);
 app.use("/api/resources", resourceRoutes);
 app.use("/api/messages", messageRoutes);
