@@ -1,6 +1,7 @@
 const Message = require("../models/message");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
+const Room = require("../models/room");
 
 const initChatSocket = (io) => {
 
@@ -22,13 +23,41 @@ const initChatSocket = (io) => {
   });
 
   io.on("connection", (socket) => {
-    console.log(`User connected: ${socket.user.name}`);
+    console.log(`User connected: ${socket.user.name}`);``
 
     // JOIN ROOM
-    socket.on("join-room", (roomId) => {
-      socket.join(roomId);
-      console.log(`${socket.user.name} joined room ${roomId}`);
+     // JOIN ROOM
+socket.on("join-room", async (roomId) => {
+  try {
+    const room = await Room.findById(roomId);
+
+    if (!room) {
+      return socket.emit("error", {
+        message: "Room not found",
+      });
+    }
+
+    const isMember = room.members.some(
+      (memberId) => memberId.toString() === socket.user._id.toString()
+    );
+
+    if (!isMember) {
+      return socket.emit("error", {
+        message: "You are not a member of this room",
+      });
+    }
+
+    socket.join(roomId);
+
+    console.log(`${socket.user.name} joined room ${roomId}`);
+  } catch (err) {
+    console.error("Join room error:", err.message);
+
+    socket.emit("error", {
+      message: "Unable to join room",
     });
+  }
+});
 
     // SEND MESSAGE
     socket.on("send-message", async ({ roomId, content }) => {
