@@ -11,6 +11,7 @@ const Sidebar = ({
   setActiveSection,
   members,
   myProgress,
+  allProgress,
   currentUserId,
   onChatOpen,
   onAiOpen,
@@ -67,7 +68,7 @@ const Sidebar = ({
             key={member._id}
             member={member}
             isMe={member._id === currentUserId}
-            progress={member._id === currentUserId ? myProgress : 0}
+            progress={member._id === currentUserId ? myProgress : allProgress[member._id] ?? 0}
           />
         ))}
       </div>

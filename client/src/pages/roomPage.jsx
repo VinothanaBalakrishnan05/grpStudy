@@ -21,9 +21,11 @@ const RoomPage = () => {
   const [myProgress, setMyProgress] = useState(0);
   const [chatOpen, setChatOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [allProgress, setAllProgress] = useState({});
 
   useEffect(() => {
     fetchRoom();
+    fetchAllProgress();
   }, [id]);
 
   const fetchRoom = async () => {
@@ -36,6 +38,14 @@ const RoomPage = () => {
       setLoading(false);
     }
   };
+  const fetchAllProgress = async () => {
+  try {
+    const res = await api.get(`/api/topics/${id}/progress`);
+    setAllProgress(res.data);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const handleLeave = async () => {
     try {
@@ -86,6 +96,7 @@ const RoomPage = () => {
           setActiveSection={setActiveSection}
           members={room.members}
           myProgress={myProgress}
+          allProgress={allProgress}
           currentUserId={user.id}
           onChatOpen={() => setChatOpen(true)}
           onAiOpen={() => setAiOpen(true)}
@@ -97,7 +108,7 @@ const RoomPage = () => {
             <ResourceList roomId={id} userId={user.id} />
           )}
           {activeSection === "topics" && (
-            <TopicChecklist onProgressChange={setMyProgress} />
+            <TopicChecklist roomId={id} onProgressChange={setMyProgress} />
           )}
         </main>
 

@@ -1,9 +1,15 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2, CheckSquare } from "lucide-react";
+import api from "../../api/axios";
 
-const TopicChecklist = ({ onProgressChange }) => {
+const TopicChecklist = ({ roomId, onProgressChange }) => {
   const [topics, setTopics] = useState([]);
   const [newTopic, setNewTopic] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTopics();
+  }, [roomId]);
 
   useEffect(() => {
     const done = topics.filter((t) => t.done).length;
@@ -11,26 +17,57 @@ const TopicChecklist = ({ onProgressChange }) => {
     onProgressChange(pct);
   }, [topics]);
 
-  const addTopic = () => {
+  const fetchTopics = async () => {
+    try {
+      const res = await api.get(`/api/topics/${roomId}`);
+      setTopics(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addTopic = async () => {
     if (!newTopic.trim()) return;
-    setTopics([...topics, { id: Date.now(), title: newTopic.trim(), done: false }]);
-    setNewTopic("");
+    try {
+      const res = await api.post(`/api/topics/${roomId}`, { text: newTopic.trim() });
+      setTopics([...topics, res.data]);
+      setNewTopic("");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const toggleTopic = (id) => {
-    setTopics(topics.map((t) => t.id === id ? { ...t, done: !t.done } : t));
+  const toggleTopic = async (topicId) => {
+    setTopics(topics.map((t) => (t._id === topicId ? { ...t, done: !t.done } : t)));
+    try {
+      await api.patch(`/api/topics/${topicId}/toggle`);
+    } catch (err) {
+      console.error(err);
+      fetchTopics();
+    }
   };
 
-  const deleteTopic = (id) => {
-    setTopics(topics.filter((t) => t.id !== id));
+  const deleteTopic = async (topicId) => {
+    const prev = topics;
+    setTopics(topics.filter((t) => t._id !== topicId));
+    try {
+      await api.delete(`/api/topics/${topicId}`);
+    } catch (err) {
+      console.error(err);
+      setTopics(prev);
+    }
   };
 
   const done = topics.filter((t) => t.done).length;
 
+  if (loading) {
+    return <p className="text-sm text-[#9CA3AF]">Loading topics...</p>;
+  }
+
   return (
     <div>
-
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-base font-bold text-[#111827]">My Topics</h2>
@@ -40,7 +77,6 @@ const TopicChecklist = ({ onProgressChange }) => {
         </div>
       </div>
 
-      {/* Add Topic */}
       <div className="flex gap-2 mb-4">
         <input
           type="text"
@@ -58,7 +94,6 @@ const TopicChecklist = ({ onProgressChange }) => {
         </button>
       </div>
 
-      {/* Empty State */}
       {topics.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-4">
@@ -71,29 +106,24 @@ const TopicChecklist = ({ onProgressChange }) => {
         </div>
       )}
 
-      {/* Topics List */}
       {topics.length > 0 && (
         <div className="flex flex-col gap-2">
           {topics.map((topic) => (
             <div
-              key={topic.id}
+              key={topic._id}
               className="flex items-center gap-3 bg-white border border-[#E8EBF0] rounded-lg px-4 py-3 group hover:border-indigo-100 transition"
             >
               <input
                 type="checkbox"
                 checked={topic.done}
-                onChange={() => toggleTopic(topic.id)}
+                onChange={() => toggleTopic(topic._id)}
                 className="w-4 h-4 accent-indigo-600 cursor-pointer shrink-0"
               />
-              <span className={`flex-1 text-sm ${
-                topic.done
-                  ? "line-through text-[#9CA3AF]"
-                  : "text-[#111827]"
-              }`}>
-                {topic.title}
+              <span className={`flex-1 text-sm ${topic.done ? "line-through text-[#9CA3AF]" : "text-[#111827]"}`}>
+                {topic.text}
               </span>
               <button
-                onClick={() => deleteTopic(topic.id)}
+                onClick={() => deleteTopic(topic._id)}
                 className="opacity-0 group-hover:opacity-100 p-1 rounded text-[#9CA3AF] hover:text-red-500 transition"
               >
                 <Trash2 size={14} />
@@ -102,7 +132,6 @@ const TopicChecklist = ({ onProgressChange }) => {
           ))}
         </div>
       )}
-
     </div>
   );
 };

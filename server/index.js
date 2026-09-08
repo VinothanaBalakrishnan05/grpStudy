@@ -14,6 +14,7 @@ const initChatSocket = require("./socket/chatSocket");
 const userRoutes = require("./routes/userRoutes");
 const chatbotRoutes=require("./routes/chatbotRoutes");
 const { authRateLimiter } = require("./middleware/rateLimiter");
+const topicRoutes = require("./routes/topicRoutes");
 
 
 dbConnect();
@@ -35,6 +36,7 @@ app.use("/api/resources", resourceRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/chatbot",chatbotRoutes);
+app.use("/api/topics", topicRoutes);
 
 const io = new Server(server, {
   cors: {
