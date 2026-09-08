@@ -18,7 +18,15 @@ const register = async (req, res) => {
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Please fill all fields" });
     }
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
 
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({
+        message:
+          "Password must be 8+ characters with uppercase, lowercase, number and special character",
+      });
+    }
     // check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
