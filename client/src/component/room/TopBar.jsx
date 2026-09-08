@@ -1,10 +1,10 @@
-import { ArrowLeft, Copy, LogOut } from "lucide-react";
+import { ArrowLeft, Copy, LogOut, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/authContext";
 
-const TopBar = ({ room, onLeave }) => {
+const TopBar = ({ room, onLeave, onDelete, isCreator }) => {
   const navigate = useNavigate();
-  const { user } = useAuth(); // ← add this
+  const { user } = useAuth();
 
   const copyCode = () => {
     navigator.clipboard.writeText(room.roomCode);
@@ -40,6 +40,16 @@ const TopBar = ({ room, onLeave }) => {
           <Copy size={13} />
           {room.roomCode}
         </button>
+
+        {isCreator && (
+          <button
+            onClick={onDelete}
+            className="flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs font-semibold hover:bg-red-100 transition"
+          >
+            <Trash2 size={13} />
+            Delete Room
+          </button>
+        )}
 
         <button
           onClick={onLeave}

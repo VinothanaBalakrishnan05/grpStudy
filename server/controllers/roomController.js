@@ -49,7 +49,6 @@ const createRoom = async (req, res) => {
 
     res.status(201).json({ message: "Room created successfully", room });
   } catch (error) {
-    
     res.status(500).json({ message: error.message });
   }
 };
@@ -126,6 +125,7 @@ const leaveRoom = async (req, res) => {
       return res.status(404).json({ message: "Room not found" });
     }
 
+
     // remove user from members
     room.members = room.members.filter(
       (m) => m.toString() !== req.user._id.toString(),
@@ -138,6 +138,62 @@ const leaveRoom = async (req, res) => {
   }
 };
 
+    // DELETE ROOM (creator only)
+    const deleteRoom = async (req, res) => {
+      try {
+        const room = await Room.findById(req.params.id);
+        if (!room) {
+          return res.status(404).json({ message: "Room not found" });
+        }
+
+        if (room.createdBy.toString() !== req.user._id.toString()) {
+          return res
+            .status(403)
+            .json({ message: "Only the room creator can delete this room" });
+        }
+
+        await Room.findByIdAndDelete(req.params.id);
+        res.status(200).json({ message: "Room deleted successfully" });
+      } catch (error) {
+        res.status(500).json({ message: error.message });
+      }
+    };
+
+    // REMOVE MEMBER (creator only)
+    const removeMember = async (req, res) => {
+      try {
+        const room = await Room.findById(req.params.id);
+        if (!room) {
+          return res.status(404).json({ message: "Room not found" });
+        }
+
+        if (room.createdBy.toString() !== req.user._id.toString()) {
+          return res
+            .status(403)
+            .json({ message: "Only the room creator can remove members" });
+        }
+
+        const { memberId } = req.body;
+        if (!memberId) {
+          return res.status(400).json({ message: "memberId is required" });
+        }
+        if (memberId === room.createdBy.toString()) {
+          return res
+            .status(400)
+            .json({
+              message: "Creator cannot remove themselves — use delete instead",
+            });
+        }
+
+        room.members = room.members.filter((m) => m.toString() !== memberId);
+        await room.save();
+
+        res.status(200).json({ message: "Member removed successfully", room });
+      } catch (error) {
+        res.status(500).json({ message: error.message });
+      }
+    };
+
 module.exports = {
   generateRoomCode,
   createRoom,
@@ -145,4 +201,6 @@ module.exports = {
   getMyRooms,
   getRoom,
   leaveRoom,
+  deleteRoom,
+  removeMember,
 };

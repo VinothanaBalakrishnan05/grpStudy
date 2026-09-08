@@ -45,6 +45,17 @@ const RoomPage = () => {
       console.error(err);
     }
   };
+  const handleDelete = async () => {
+  if (!window.confirm("Delete this room permanently? This can't be undone.")) {
+    return;
+  }
+  try {
+    await api.delete(`/api/rooms/${id}`);
+    navigate("/dashboard");
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#F8F9FC]">
@@ -62,7 +73,7 @@ const RoomPage = () => {
     <div className="min-h-screen bg-[#F8F9FC] flex flex-col" style={{ fontFamily: "'Inter', sans-serif" }}>
 
       {/* Top Bar */}
-      <TopBar room={room} onLeave={handleLeave}/>
+      <TopBar room={room} onLeave={handleLeave} onDelete={handleDelete}  isCreator={room.createdBy === user.id}/>
         
     
       
