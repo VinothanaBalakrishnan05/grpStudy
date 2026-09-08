@@ -1,4 +1,4 @@
-const Room = require('../models/room');
+const Room = require("../models/room");
 const generateRoomCode = () => {
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const numbers = "0123456789";
@@ -17,16 +17,26 @@ const generateRoomCode = () => {
   }
 
   // shuffle the code so it's not always letters first
-  code = code.split("").sort(() => Math.random() - 0.5).join("");
+  code = code
+    .split("")
+    .sort(() => Math.random() - 0.5)
+    .join("");
 
   return code;
 };
 const createRoom = async (req, res) => {
-  const { name, description, roomCode } = req.body;
+  const { name, description } = req.body;
 
   try {
-    if (!name || !roomCode) {
-      return res.status(400).json({ message: "Room name and code are required" });
+    if (!name) {
+      return res.status(400).json({ message: "Room name is required" });
+    }
+    let roomCode;
+    let exists = true;
+
+    while (exists) {
+      roomCode = generateRoomCode();
+      exists = await Room.findOne({ roomCode });
     }
 
     const room = await Room.create({
@@ -39,9 +49,7 @@ const createRoom = async (req, res) => {
 
     res.status(201).json({ message: "Room created successfully", room });
   } catch (error) {
-    if (error.code === 11000) {
-      return res.status(400).json({ message: "Try again, regenerate the room code" });
-    }
+    
     res.status(500).json({ message: error.message });
   }
 };
@@ -84,7 +92,7 @@ const getMyRooms = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-  // GET SINGLE ROOM
+// GET SINGLE ROOM
 const getRoom = async (req, res) => {
   try {
     const room = await Room.findById(req.params.id).populate("members", "name");
@@ -95,10 +103,12 @@ const getRoom = async (req, res) => {
 
     // check if user is a member
     const isMember = room.members.some(
-      (m) => m._id.toString() === req.user._id.toString()
+      (m) => m._id.toString() === req.user._id.toString(),
     );
     if (!isMember) {
-      return res.status(403).json({ message: "You are not a member of this room" });
+      return res
+        .status(403)
+        .json({ message: "You are not a member of this room" });
     }
 
     res.status(200).json(room);
@@ -118,7 +128,7 @@ const leaveRoom = async (req, res) => {
 
     // remove user from members
     room.members = room.members.filter(
-      (m) => m.toString() !== req.user._id.toString()
+      (m) => m.toString() !== req.user._id.toString(),
     );
     await room.save();
 
@@ -128,5 +138,11 @@ const leaveRoom = async (req, res) => {
   }
 };
 
-
-module.exports = { generateRoomCode, createRoom, joinRoom, getMyRooms,getRoom, leaveRoom };
+module.exports = {
+  generateRoomCode,
+  createRoom,
+  joinRoom,
+  getMyRooms,
+  getRoom,
+  leaveRoom,
+};

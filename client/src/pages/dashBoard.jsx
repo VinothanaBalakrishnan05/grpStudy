@@ -3,24 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
 import api from "../api/axios";
 
-const generateRoomCode = () => {
-  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  const numbers = "0123456789";
-  const all = letters + numbers;
-
-  let code = "";
-  code += letters[Math.floor(Math.random() * letters.length)];
-  code += letters[Math.floor(Math.random() * letters.length)];
-  code += numbers[Math.floor(Math.random() * numbers.length)];
-  code += numbers[Math.floor(Math.random() * numbers.length)];
-
-  for (let i = 0; i < 2; i++) {
-    code += all[Math.floor(Math.random() * all.length)];
-  }
-
-  return code.split("").sort(() => Math.random() - 0.5).join("");
-};
-
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -30,9 +12,10 @@ const Dashboard = () => {
   // create room state
   const [roomName, setRoomName] = useState("");
   const [description, setDescription] = useState("");
-  const [roomCode, setRoomCode] = useState(generateRoomCode());
   const [createError, setCreateError] = useState("");
   const [createLoading, setCreateLoading] = useState(false);
+  const [createdRoomCode, setCreatedRoomCode] = useState("");
+  const [createdRoomId, setCreatedRoomId] = useState("");
 
   // join room state
   const [joinCode, setJoinCode] = useState("");
@@ -52,9 +35,9 @@ const Dashboard = () => {
       const res = await api.post("/api/rooms/create", {
         name: roomName,
         description,
-        roomCode,
       });
-      navigate(`/room/${res.data.room._id}`);
+      setCreatedRoomCode(res.data.room.roomCode);
+      setCreatedRoomId(res.data.room._id);
     } catch (err) {
       setCreateError(err.response?.data?.message || "Something went wrong");
     } finally {
@@ -78,24 +61,23 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-
       {/* Navbar */}
       <nav className="bg-white shadow px-10 py-4 flex justify-between items-center">
         <h1 className="text-xl font-bold text-indigo-600">StudyTogether</h1>
         <div className="flex items-center gap-4">
           <button
-             onClick={() => navigate("/profile")}
-             className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold hover:bg-indigo-200 transition"
-             title={user?.name}
+            onClick={() => navigate("/profile")}
+            className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold hover:bg-indigo-200 transition"
+            title={user?.name}
           >
             {user?.avatar ? (
               <img
-              src={user.avatar}
-              alt="avatar"
-              className="w-9 h-9 rounded-full object-cover"
+                src={user.avatar}
+                alt="avatar"
+                className="w-9 h-9 rounded-full object-cover"
               />
             ) : (
-            user?.name?.[0]?.toUpperCase()
+              user?.name?.[0]?.toUpperCase()
             )}
           </button>
           <button
@@ -110,7 +92,6 @@ const Dashboard = () => {
       {/* Main */}
       <div className="flex flex-col items-center justify-center mt-16 px-4">
         <div className="bg-white rounded-2xl shadow-lg w-full max-w-md p-8">
-
           {/* Toggle Tabs */}
           <div className="flex rounded-lg overflow-hidden border border-indigo-200 mb-6">
             <button
@@ -137,60 +118,66 @@ const Dashboard = () => {
 
           {/* Create Room Form */}
           {activeTab === "create" && (
-            <form onSubmit={handleCreateRoom} className="flex flex-col gap-4">
-              <h2 className="text-xl font-bold text-gray-800">Create a Room</h2>
+            <>
+              <form onSubmit={handleCreateRoom} className="flex flex-col gap-4">
+                <h2 className="text-xl font-bold text-gray-800">
+                  Create a Room
+                </h2>
 
-              {createError && (
-                <p className="text-red-500 text-sm bg-red-50 p-3 rounded-lg">
-                  {createError}
-                </p>
-              )}
+                {createError && (
+                  <p className="text-red-500 text-sm bg-red-50 p-3 rounded-lg">
+                    {createError}
+                  </p>
+                )}
 
-              <input
-                type="text"
-                placeholder="Room Name"
-                value={roomName}
-                onChange={(e) => setRoomName(e.target.value)}
-                className="border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500"
-                required
-              />
-
-              <input
-                type="text"
-                placeholder="Description (optional)"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500"
-              />
-
-              {/* Room Code */}
-              <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  value={roomCode}
-                  readOnly
-                  className="border border-gray-300 rounded-lg px-4 py-3 flex-1 bg-gray-50 font-mono tracking-widest text-indigo-600 font-bold"
+                  placeholder="Room Name"
+                  value={roomName}
+                  onChange={(e) => setRoomName(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500"
+                  required
                 />
-                <button
-                  type="button"
-                  onClick={() => setRoomCode(generateRoomCode())}
-                  className="px-3 py-3 bg-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-200 transition text-sm font-semibold"
-                >
-                  🔄
-                </button>
-              </div>
-              <p className="text-xs text-gray-400 -mt-2">
-                Share this code with friends to join your room
-              </p>
 
-              <button
-                type="submit"
-                disabled={createLoading}
-                className="bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50"
-              >
-                {createLoading ? "Creating..." : "Create Room"}
-              </button>
-            </form>
+                <input
+                  type="text"
+                  placeholder="Description (optional)"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-indigo-500"
+                />
+
+                <button
+                  type="submit"
+                  disabled={createLoading}
+                  className="bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50"
+                >
+                  {createLoading ? "Creating..." : "Create Room"}
+                </button>
+              </form>
+
+              {createdRoomCode && (
+                <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                  <p className="text-green-700 font-semibold">
+                    Room created successfully!
+                  </p>
+
+                  <p className="text-sm text-gray-600 mt-2">
+                    Share this code with your friends:
+                  </p>
+
+                  <p className="text-2xl font-bold font-mono tracking-widest text-indigo-600 mt-2">
+                    Code: {createdRoomCode}
+                  </p>
+                  <button
+                    onClick={() => navigate(`/room/${createdRoomId}`)}
+                    className="mt-4 bg-indigo-600 text-white py-2 px-6 rounded-lg font-semibold hover:bg-indigo-700 transition"
+                  >
+                    Go to Room
+                  </button>
+                </div>
+              )}
+            </>
           )}
 
           {/* Join Room Form */}
@@ -223,10 +210,8 @@ const Dashboard = () => {
               </button>
             </form>
           )}
-
         </div>
       </div>
-
     </div>
   );
 };
