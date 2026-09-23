@@ -11,7 +11,7 @@ A full-stack real-time group study platform built using the MERN stack. StudyTog
 - 💬 Real-time Group Chat using Socket.io
 - 📁 Resource Sharing (PDFs, Links, Images, Videos)
 - ☁️ File Uploads via Cloudinary
-- 🤖 AI Study Assistant powered by Ollama (Phi-3 Mini / Mistral 7B)
+- 🤖 AI Study Assistant powered by Google Gemini API (Previously:Ollama (Phi-3 Mini / Mistral 7B))
 - 👤 Profile Management with Avatar Upload
 - 🌐 Fully Responsive UI (Tailwind CSS)
 
@@ -34,10 +34,7 @@ A full-stack real-time group study platform built using the MERN stack. StudyTog
 - Cloudinary
 
 ### AI Integration
-- Ollama
-  - Phi-3 Mini
-  - Mistral 7B
-
+  - Google Gemini API (gemini-3.1-flash-lite)
 ---
 
 ## 📂 Project Structure
@@ -98,30 +95,14 @@ npm run dev
 
 ## 🤖 AI Setup (Ollama)
 
-Start Ollama:
+🤖 AI Setup (Gemini API)
+Get a free API key from Google AI Studio: https://aistudio.google.com/apikey
 
-```bash
-ollama serve
-```
-
-Run a model:
-
-```bash
-ollama run phi3:mini
-```
-
-Or:
-
-```bash
-ollama run mistral
-```
-
-Ensure your backend connects to Ollama at:
+Add it to your `server/.env` file:
 
 ```
-http://localhost:11434
+GEMINI_API_KEY=your_key_here
 ```
-
 ---
 
 ## 📦 Deployment Suggestions
